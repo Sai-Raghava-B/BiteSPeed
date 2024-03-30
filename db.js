@@ -12,11 +12,6 @@ const database = process.env.DB_DATABASE;
 
 
 const pool = new Pool({
-  // user: 'postgres',
-  // host: 'localhost',
-  // database: 'NewDB',
-  // password: 'barat@123',
-  // port: 5432,
   user: user,
   host: host,
   database: database,
