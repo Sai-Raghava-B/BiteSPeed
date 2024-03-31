@@ -11,18 +11,22 @@ export const identifyContact = async (req, res) => {
     // console.log(primaryContact)
 
     if (primaryContact) {
-      const oldestPrimaryContact = findOldestPrimaryContact(primaryContact);
+      const oldestPrimaryContact =await findOldestPrimaryContact(primaryContact);
       const secondaryContacts = await findSecondaryContacts(email, phoneNumber);
-      const allContacts = await getDetails(primaryContact[0].id);
-      consolidatedContact = {
-        primaryContatctId: primaryContact[0].id,
-        // emails: [primaryContact[0].email, ...secondaryContacts.map(contact => contact.email)],
-        // phoneNumbers: [primaryContact[0].phonenumber, ...secondaryContacts.map(contact => contact.phonenumber)],
-        // secondaryContactIds: secondaryContacts.map(contact => contact.id)
-        emails: [primaryContact[0].email, ...allContacts.map(contact => contact.email)],
-        phoneNumbers: [primaryContact[0].phonenumber, ...allContacts.map(contact => contact.phonenumber)],
-        secondaryContactIds: allContacts.map(contact => contact.id)
-      };
+      const secondData = await findSecondaryContacts(email, phoneNumber);
+      // console.log(primaryContact);
+      // console.log("hi")
+      // console.log(secondaryContacts);
+      
+      // const linkedIdsNotMatching = secondaryContacts.filter(item => item.linkedid !== oldestPrimaryContact.id);
+      // console.log(linkedIdsNotMatching.linkedid);
+      const linkedIds = secondData
+        .filter(item => item.linkedid !== null && item.linkedid !== oldestPrimaryContact.id)
+        .map(item => item.linkedid);
+
+      
+      const uniqueLinkedIds = [...new Set(linkedIds)];
+      // console.log(uniqueLinkedIds[0]);
 
       const secondaryContactIds = await Promise.all(primaryContact
                 .filter(contact => contact.id !== oldestPrimaryContact.id) // Exclude the oldest contact
@@ -39,6 +43,28 @@ export const identifyContact = async (req, res) => {
                   await updateNewLinkedId(oldestPrimaryContact.id,contact.linkedid);
                   return contact.id;
                 }));
+
+      // const updateIDs = await Promise.all(secondContact
+      //   .filter(contact => contact.id === linkedIds) // Exclude the oldest contact
+      //           .map(async (contact) => {
+      //             await updateLinkedId(oldestPrimaryContact.id,uniqueLinkedIds[0]);
+      //             return contact.id;
+      //           }));
+      // console.log(oldestPrimaryContact.id)
+      const updateIDs = await updateLinkedId(uniqueLinkedIds[0],oldestPrimaryContact.id);
+      const updtaePrecedence = await updateContactLinkPrecedence(uniqueLinkedIds[0], 'secondary');
+      
+      const allContacts = await getDetails(primaryContact[0].id);
+
+      consolidatedContact = {
+        primaryContatctId: primaryContact[0].id,
+        // emails: [primaryContact[0].email, ...secondaryContacts.map(contact => contact.email)],
+        // phoneNumbers: [primaryContact[0].phonenumber, ...secondaryContacts.map(contact => contact.phonenumber)],
+        // secondaryContactIds: secondaryContacts.map(contact => contact.id)
+        emails: [primaryContact[0].email, ...allContacts.map(contact => contact.email)],
+        phoneNumbers: [primaryContact[0].phonenumber, ...allContacts.map(contact => contact.phonenumber)],
+        secondaryContactIds: allContacts.map(contact => contact.id)
+      };
     } else if(secondContact.length>0){
 
       const seconderyContact = await findSecondaryContacts(email, phoneNumber)
