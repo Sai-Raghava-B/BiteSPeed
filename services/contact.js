@@ -86,6 +86,20 @@ export const getDetails = async(Id) => {
   }
 };
 
+export const getIdDetails = async (Id) => {
+  try {
+    const query = `
+      SELECT *
+      FROM contacts
+      WHERE (id = $1)
+    `;
+    const result = await db.query(query, [Id]);
+    return result.rows;
+  } catch (error) {
+    console.error('Error getting details:', error);
+    throw error;
+  }
+};
 // Function to update an existing contact to secondary
 export const updateContactToSecondary = async (contactId) => {
     try {

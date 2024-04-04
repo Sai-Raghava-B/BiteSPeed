@@ -1,5 +1,5 @@
 
-import { findPrimaryContact,findSecondaryContacts,createPrimaryContact,getDetails,updateLinkedId,updateNewLinkedId ,updateContactToSecondary,updateContactLinkPrecedence, createSecondaryContact } from '../services/contact.js';
+import { findPrimaryContact,findSecondaryContacts,createPrimaryContact,getIdDetails,getDetails,updateLinkedId,updateNewLinkedId ,updateContactToSecondary,updateContactLinkPrecedence, createSecondaryContact } from '../services/contact.js';
 
 export const identifyContact = async (req, res) => {
   const { email, phoneNumber } = req.body;
@@ -55,15 +55,28 @@ export const identifyContact = async (req, res) => {
       const updtaePrecedence = await updateContactLinkPrecedence(uniqueLinkedIds[0], 'secondary');
       
       const allContacts = await getDetails(primaryContact[0].id);
+      const contactEmail = allContacts.map(contact => contact.email);
+      // console.log(contactEmail);
+      const setEmail  = new Set(...[contactEmail]);
+      // console.log(...setEmail)
+      const contactPhone = allContacts.map(contact => contact.phonenumber);
+      // console.log(contactPhone);
+      const setPhone = new Set(...[contactPhone]);
+      // console.log(...setPhone)
+      const ContactId = allContacts.map(contact => contact.id) ;
+      ContactId.sort();
 
       consolidatedContact = {
         primaryContatctId: primaryContact[0].id,
         // emails: [primaryContact[0].email, ...secondaryContacts.map(contact => contact.email)],
         // phoneNumbers: [primaryContact[0].phonenumber, ...secondaryContacts.map(contact => contact.phonenumber)],
         // secondaryContactIds: secondaryContacts.map(contact => contact.id)
-        emails: [primaryContact[0].email, ...allContacts.map(contact => contact.email)],
-        phoneNumbers: [primaryContact[0].phonenumber, ...allContacts.map(contact => contact.phonenumber)],
-        secondaryContactIds: allContacts.map(contact => contact.id)
+        // emails: [primaryContact[0].email, ...allContacts.map(contact => contact.email)],
+        emails: [primaryContact[0].email, ...setEmail],
+        // phoneNumbers: [primaryContact[0].phonenumber, ...allContacts.map(contact => contact.phonenumber)],
+        phoneNumbers: [primaryContact[0].phonenumber, ...setPhone],
+        // secondaryContactIds: allContacts.map(contact => contact.id)
+        secondaryContactIds: [...ContactId]
       };
     } else if(secondContact.length>0){
 
@@ -84,20 +97,32 @@ export const identifyContact = async (req, res) => {
       // console.log(secondContact)
       // console.log(ID)
       const newSecondaryContact = await createSecondaryContact(email, phoneNumber, ID);
+      const primDetails = await getIdDetails(ID)
       const details = await getDetails(ID)
+      const contactEmail = details.map(contact => contact.email);
+      // console.log(contactEmail);
+      const setEmail  = new Set(...[contactEmail]);
+      // console.log(...setEmail)
+      const contactPhone = details.map(contact => contact.phonenumber);
+      // console.log(contactPhone);
+      const setPhone = new Set(...[contactPhone]);
+      // console.log(...setPhone)
+      const ContactId = details.map(contact => contact.id) ;
+      ContactId.sort();
         
         consolidatedContact={
           primaryContatctId:ID,
           // emails: [...details.map(contact => contact.email),...secondContact.map(contact => contact.email)],
-          emails: [...details.map(contact => contact.email)],
+          emails: [primDetails[0].email, ...setEmail],
           // phoneNumbers: [...details.map(contact => contact.phonenumber), ...secondContact.map(contact => contact.phonenumber)],
-          phoneNumbers: [...details.map(contact => contact.phonenumber)],
+          phoneNumbers: [primDetails[0].phonenumber, ...setPhone],
           // secondaryContactIds:[...details.map(contact => contact.id) ,...secondContact.map(contact => contact.id)],
-          secondaryContactIds:[...details.map(contact => contact.id)  ],
+          // secondaryContactIds:[...details.map(contact => contact.id)  ],
+          secondaryContactIds:[...ContactId ],
         }
-        console.log(...details.map(contact => contact.id));
-        console.log("hi")
-        console.log(...secondContact.map(contact => contact.id));
+        // console.log(...details.map(contact => contact.id));
+        // console.log("hi")
+        // console.log(...secondContact.map(contact => contact.id));
       // If primary contact doesn't exist, create a new primary contact
       
     }
